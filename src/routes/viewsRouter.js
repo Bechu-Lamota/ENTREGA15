@@ -14,8 +14,12 @@ viewsRouter.get('/realTimeProducts', (req, res) => {
     return res.render('realtimeproducts')
 })
 
-viewsRouter.get('/swish', (req, res) => {
-    return res.render('swish');
+viewsRouter.get('/swish',
+userMiddleware.isAuth.bind(userMiddleware),
+  userMiddleware.hasRole('USER'),
+  (req, res) => {
+    // Si llega a esta parte, significa que el usuario está autenticado y tiene el rol 'USER'
+    return res.render('swish')
 })
 
 viewsRouter.post('/swish', (req, res) => {

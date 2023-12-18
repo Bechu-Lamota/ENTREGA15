@@ -23,7 +23,7 @@ const productRouterFn = () => {
 
 	productsRouter.post('/',
 		userMiddleware.isAuth.bind(userMiddleware),
-		userMiddleware.hasRole('ADMIN'),
+		userMiddleware.hasRole('ADMIN', 'PREMIUM'),
 		productsController.addProduct.bind(productsController)
 	)
 

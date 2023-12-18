@@ -58,8 +58,13 @@ class ProductsController {
           })
         }
 
-        const { body } = req
-        const newProduct = await this.service.addProduct(body)
+        const ownerMail = req.user ? req.user.email : null
+        if (!ownerMail) {
+          return res.status(401).json({ error: 'Usuario no autenticado'})
+        }
+
+        const bodyOwner = { ...req.body, owner: ownerMail }
+        const newProduct = await this.service.addProduct(bodyOwner)
     
         if (!newProduct) {
           return res.status(500).json({
@@ -73,7 +78,6 @@ class ProductsController {
         console.error('Error al agregar producto:', error);
         res.status(500).json({ error: 'No se pudo agregar producto' })
       }
-
     }
     
     async updateProduct (req, res) {

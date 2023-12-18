@@ -13,7 +13,11 @@ const productSchema = mongoose.Schema({
     status: Boolean,
     category: String,
     thumbnail: String,
-    stock: Number
+    stock: Number,
+    owner: {
+        type: String,
+        default: 'ADMIN'
+    }
 })
 
 productSchema.plugin(paginate)
