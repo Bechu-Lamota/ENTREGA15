@@ -65,18 +65,9 @@ class CartsController {
         return res.status(400).json({ error: 'No se pudo procesar su compra' })
       }
 
-      const mailOptions = {
-        from: `Shop Server AS <${settings.emailUser}>`,
-        to: user.email,
-        subject: 'Purchase Order',
-        html: `<div>
-                 <h1>Gracias ${user.email} por su compra</h1>
-                 <p>Total: ${result.amount}</p>
-               </div>`,
-        attachments: []
-      }
+      const mailOptions = purchaseMail(user, result)
       await sendMail(mailOptions)
-      
+
       res.json(result)
     } catch (error) {
       console.error(`Error purchasing cart: ${error.message}`)

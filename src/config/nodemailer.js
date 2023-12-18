@@ -30,18 +30,30 @@ const sendMail = async (subject, body) => {
   }
 }
 
-const purchaseMailReject = (userEmail) => ({
+const purchaseMailReject = (user) => ({
   from: `Shop Server AS <${MAIL}>`,
-  to: userEmail,
+  to: user.email,
   subject: 'Purchase Reject Order',
   html: `<div>
-           <h1>Lo sentimos ${userEmail}</h1>
+           <h1>Lo sentimos ${user.email}</h1>
            <p>No se pudo procesar su compra</p>
          </div>`,
   attachments: [],
 })
 
+const purchaseMail = () => (user, result) ({
+  from: `Shop Server AS <${MAIL}>`,
+  to: user.email,
+  subject: 'Purchase Order',
+  html: `<div>
+                 <h1>Gracias ${user.email} por su compra</h1>
+                 <p>Total: ${result.amount}</p>
+               </div>`,
+  attachments: []
+})
+
 module.exports = {
   sendMail,
-  purchaseMailReject
+  purchaseMailReject,
+  purchaseMail
 }
