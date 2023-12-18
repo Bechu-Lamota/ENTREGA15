@@ -49,7 +49,6 @@ class UserMiddleware {
                     error: 'No tienes permiso para realizar esta acción'
                 })
             }
-            
             return next()
         }
     }

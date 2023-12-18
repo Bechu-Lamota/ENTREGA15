@@ -59,21 +59,26 @@ passport.authenticate('login', {
   failureRedirect: '/login', 
   failureFlash: true 
 }),
- async (req, res) => {
-    //return res.send(req.user)
+  async (req, res) => {
     const token = generateToken({
-        name: req.user.name,
-        email: req.user.email,
-    })
+      name: req.user.name,
+      email: req.user.email,
+      role: req.user.role  // Agregar el rol del usuario al token
+    });
 
     console.log({ token }); // Agrega este registro para verificar el token
-    
-    return res.cookie('authToken', token, {
-        maxAge: 60 * 60 * 1000
-    })//.redirect('/api/sessions/current');
-      .redirect('/products');
-})
 
+    res.cookie('authToken', token, {
+      maxAge: 60 * 60 * 1000
+    });
+
+    const user = req.session.user; // Considera eliminar la necesidad de usar sessions
+    const redirectUrl = user
+      ? '/products'
+      : '/swish'
+    // Redirige a /products si hay un usuario en sesión, de lo contrario a /swish
+    res.redirect(redirectUrl)
+})
 
 sessionRouter.post('/recovery-password', async (req, res) => {
     let user = await userModel.findOne({ email: req.body.email })

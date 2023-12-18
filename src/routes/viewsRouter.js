@@ -14,9 +14,8 @@ viewsRouter.get('/realTimeProducts', (req, res) => {
     return res.render('realtimeproducts')
 })
 
-const userchatnames = []
 viewsRouter.get('/swish', (req, res) => {
-  return res.render('swish')
+    return res.render('swish');
 })
 
 viewsRouter.post('/swish', (req, res) => {
@@ -30,7 +29,10 @@ viewsRouter.post('/swish', (req, res) => {
   return res.redirect(`/chatSwish?username=${userchatname}`)
 })
 
-viewsRouter.get('/chatSwish', (req, res) => {
+viewsRouter.get('/chatSwish',
+  userMiddleware.isAuth.bind(userMiddleware),
+  userMiddleware.hasRole('USER'),
+  (req, res) => {
   return res.render('swishChat')
 })
 
