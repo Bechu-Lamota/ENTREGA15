@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer')
 const settings = require('../config/command/commander')
 
 const MAIL = settings.nodemailer_user
+const PASSWORD = settings.nodemailer_password
 
 const sendMail = async (subject, body) => {
   const transporter = nodemailer.createTransport({
@@ -9,7 +10,7 @@ const sendMail = async (subject, body) => {
     port: 587,
     auth: {
       user: MAIL,
-      pass: settings.nodemailer_password
+      pass: PASSWORD
     }
   })
 
@@ -30,7 +31,7 @@ const sendMail = async (subject, body) => {
 }
 
 const purchaseMailReject = (userEmail) => ({
-  from: `Shop Server AS <${settings.emailUser}>`,
+  from: `Shop Server AS <${MAIL}>`,
   to: userEmail,
   subject: 'Purchase Reject Order',
   html: `<div>
