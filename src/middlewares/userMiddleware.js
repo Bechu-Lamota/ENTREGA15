@@ -54,6 +54,15 @@ class UserMiddleware {
         }
     }
 
+    isUser(req, res, next) {
+        if (req.user.role !== 'USER') {
+            return res.status(403).json({
+                error: 'No tienes permiso para realizar esta acción como usuario'
+            });
+        }
+        return next();
+    }
+
 }
 
 module.exports = UserMiddleware
