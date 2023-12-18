@@ -3,7 +3,7 @@ const productsFactoryDAO = require('../DAOs/factory/productsFactoryDAO')
 
 class ProductsRepository {
     constructor () {
-        this.storage = new productsFactoryDAO(process.env.STORAGE)
+        this.storage = productsFactoryDAO(process.env.STORAGE)
     }
     
     getProducts () {

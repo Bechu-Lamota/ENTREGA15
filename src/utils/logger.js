@@ -1,7 +1,7 @@
 // logger.js
-const winston = require('winston');
-const settings = require('../commands/command');
-const logger_mode = settings.logger_mode;
+const winston = require('winston')
+const settings = require('../config/command/commander')
+const logger_mode = settings.logger_mode
 
 const customLevelsOptions = {
 	levels: {
@@ -56,4 +56,4 @@ const addLogger = (req, res, next) => {
 	next()
 }
 
-module.exports = { addLogger }
+module.exports = addLogger
