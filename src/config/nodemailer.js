@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer')
-const settings = require('../command/commander')
+const settings = require('../config/command/commander')
 
 const MAIL = settings.nodemailer_user
 
