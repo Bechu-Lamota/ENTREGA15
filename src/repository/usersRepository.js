@@ -1,7 +1,6 @@
 const { isValidObjectId } = require('mongoose')
 const usersMongoDAO = require('../DAOs/mongo/usersMongoDAO')
-const { generateToken } = require('../utils/jwt')
-const { createHash, isValidPassword } = require('../utils/passwordHash')
+const { createHash } = require('../utils/passwordHash')
 
 class usersRepository {
   constructor () {
@@ -17,6 +16,13 @@ class usersRepository {
       return undefined
     }
     return this.storage.getUserById(id)
+  }
+
+  getUserByEmail(email) {
+    if (!isValidObjectId(email)) {
+      return undefined
+    }
+    return this.storage.getUserByEmail(email)
   }
 
   async addUser(body) {
@@ -38,25 +44,8 @@ class usersRepository {
     return this.storage.deleteUser(id)
   }
 
-  loginUser (email, password) {
-    const user = this.storage.getByEmail(email)
-    if (!user) {
-      return false
-    }
-
-    if(!isValidPassword(password, user.password)) {
-      return false
-    }
-
-    const token = generateToken({
-      userId: user.id,
-      role: user.role
-    })
-
-    delete user.password
-    user.token = token
-
-    return user
+  loginUser(email, password) {
+    return this.storage.loginUser(email, password);
   }
   
 }

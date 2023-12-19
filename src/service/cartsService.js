@@ -33,7 +33,7 @@ class CartsService {
 		}
 	}
 
-	async addProductToCart(cid, pid, quantity) {
+	async addProductCart(cid, pid, quantity) {
 		try {
 			const cart = await this.repository.getCartById(cid)
 			if (!cart) throw new Error('Cart not found')
@@ -41,7 +41,7 @@ class CartsService {
 			const product = await productsRepository.getProductById(pid)
 			if (!product) throw new Error('Product not found in inventory')
 
-			return this.repository.addProductToCart(cid, pid, quantity)
+			return this.repository.addProductCart(cid, pid, quantity)
 		} catch (error) {
 			throw error
 		}

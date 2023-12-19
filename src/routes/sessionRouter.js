@@ -1,11 +1,13 @@
-const { Router } = require('express');
-const passport = require('passport');
-const { generateToken } = require('../utils/jwt');
+const { Router } = require('express')
+const passport = require('passport')
+const { generateToken } = require('../utils/jwt')
+const { createHash } = require('../utils/passwordHash')
 const passportCall = require('../config/passport/passport.call')
-const settings = require('../config/command/commander')
-const sendMail = require('../config/nodemailer')
+const { sendMail, recoveryMail } = require('../config/nodemailer')
+const UsersController = require('../controllers/usersController')
 
-const sessionRouter = new Router();
+const sessionRouter = new Router()
+const usersController = new UsersController()
 
 sessionRouter.get('/', (req, res) => {
     if (!req.session.counter) {
@@ -26,21 +28,9 @@ sessionRouter.post('/register',
   passport.authenticate('register', { failureRedirect: '/register' }), 
   async (req, res) => {
     try {
-      /*const user = req.user
-
-      await nodeM.sendMail({
-        from: `SWISH < ${settings.nodemailer_user}>`,
-        to: user.email,
-        subject: 'Bienvenido a la comunidad más grande',
-        html: `<div>
-                    <h1>¿Querés equipara tu casa?</h1>
-                    <p> Los mejores precios a tan solo un click, que esperas?</p>
-                    <button><a href="http://localhost8080/products">¡VAMOS!</a></button>
-                </div>`,
-        attachments: []
-    });
-
-    */
+      //debo hacer un const que si se registra correctamente el mail envie el registerMail
+      const mailRegister = sendMail.registerMail(user.email)
+      await sendMail(mailRegister)
     return res.status(201).json({ message: '¡El usuario se registró correctamente! Se ha enviado un correo de bienvenida.' });
   } catch (error) {
     console.error(error);
@@ -81,18 +71,86 @@ passport.authenticate('login', {
 })
 
 sessionRouter.post('/recovery-password', async (req, res) => {
-    let user = await userModel.findOne({ email: req.body.email })
-  
+  try {
+    const { email } = req.body
+    const user = await usersController.getUserByEmail(email)
+    
     if (!user) {
-      return res.status(401).json({
-        error: 'El usuario no existe en el sistema'
-      })
+      req.flash('error', 'El usuario no existe en el sistema')
+      return res.status(401).redirect('/recovery-password')
     }
-    const newPassword = createHash(req.body.password)
-    await userModel.updateOne({ email: user.email }, { password: newPassword })
+    
+    // Genera un token único y almacénalo en el usuario
+    const resetToken = createHash(Date.now().toString())
+    user.resetToken = resetToken
+    user.resetTokenExpiration = Date.now() + 3600000 // Expira en 1 hora
+    // Guarda los cambios en el usuario
+    await user.save();
   
-    return res.redirect('/login')
-  })
+    // Envía el correo electrónico
+    const mailRecovery = sendMail.recoveryMail(user)
+    await sendMail(mailRecovery)
+    
+    req.flash('success', 'Se ha enviado un correo de recuperación de contraseña')
+    return res.redirect('/recovery-password')
+  } catch (error) {
+    console.error(error)
+    req.flash('error', 'Error al procesar la recuperación de contraseña')
+    return res.redirect('/recovery-password')
+  }
+})
+
+sessionRouter.get('/reset-password/:token', async (req, res) => {
+  try {
+    const { token } = req.params
+    const user = await usersController.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+
+    if (!user) {
+      req.flash('error', 'El enlace de restablecimiento de contraseña no es válido o ha expirado');
+      return res.redirect('/recovery-password');
+    }
+
+    return res.render('resetPassword', { token });
+  } catch (error) {
+    console.error(error);
+    req.flash('error', 'Error al procesar el restablecimiento de contraseña');
+    return res.redirect('/recovery-password');
+  }
+});
+
+sessionRouter.post('/reset-password/:token', async (req, res) => {
+  try {
+    const { token } = req.params
+    const newPassword = createHash(req.body.password);
+    const user = await userModel.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } });
+
+    if (!user) {
+      req.flash('error', 'El enlace de restablecimiento de contraseña no es válido o ha expirado');
+      return res.redirect('/recovery-password');
+    }
+
+    // Verifica que la nueva contraseña no sea igual a la contraseña actual
+    if (newPassword === user.password) {
+      req.flash('error', 'La contraseña no puede ser la misma que la actual');
+      return res.redirect(`/reset-password/${token}`);
+    }
+
+    // Actualiza la contraseña y elimina el token de reseteo
+    user.password = newPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpiration = undefined;
+
+    await user.save();
+
+    req.flash('success', 'Contraseña restablecida con éxito');
+    return res.redirect('/login');
+  } catch (error) {
+    console.error(error);
+    req.flash('error', 'Error al procesar el restablecimiento de contraseña');
+    return res.redirect('/recovery-password');
+  }
+});
+
 
 sessionRouter.get('/current', passportCall('jwt'), (req, res) => {
     return res.json({
